@@ -8,10 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ARG NOVOID_CORE_REPO=https://github.com/hanovoid/novoid-core.git
 ARG NOVOID_CORE_REF=main
+ARG NOVOID_CORE_COMMIT=7e71a241c8701c6b333d95de9c266ddfe3fd979f
 
 # 1. Build Novoid Core (upstream proxy & embedded WebUI)
 WORKDIR /build/novoid-core
-RUN git clone --depth 1 --branch "${NOVOID_CORE_REF}" "${NOVOID_CORE_REPO}" . \
+RUN echo "Building novoid-core ${NOVOID_CORE_COMMIT}" \
+    && git clone --depth 1 --branch "${NOVOID_CORE_REF}" "${NOVOID_CORE_REPO}" . \
     && cargo build --release --bin novoid-core --bin acc
 
 # 2. Build Novoid Proxy (2-tier model & tier router)

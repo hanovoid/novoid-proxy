@@ -453,7 +453,20 @@ async fn passthrough_inner(
     }
 
     match builder.send().await {
-        Ok(resp) => stream_reqwest_response(resp, state.shutdown_rx.clone()),
+        Ok(resp) => {
+            if resp.status().is_success()
+                && ((method != axum::http::Method::GET && uri.starts_with("/api/accounts"))
+                    || uri.starts_with("/api/auth/complete")
+                    || uri.starts_with("/oauth-callback")
+                    || uri.starts_with("/refresh-token"))
+            {
+                let bg_router = Arc::clone(&state.router);
+                tokio::spawn(async move {
+                    bg_router.refresh_models(true).await;
+                });
+            }
+            stream_reqwest_response(resp, state.shutdown_rx.clone())
+        }
         Err(err) => {
             eprintln!("[NovoidProxy] Loi xu ly request {uri}: {err}");
             (

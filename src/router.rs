@@ -502,6 +502,59 @@ fn fallback_groups_for(group_key: &str) -> &'static [&'static str] {
     }
 }
 
+fn default_group_models(group_key: &str) -> Vec<String> {
+    let raw: &[&str] = match group_key {
+        "novoid-claude" => &[
+            "claude-opus-5-5-high",
+            "claude-opus-4-6-thinking",
+            "claude-opus-5-5-medium",
+            "claude-opus-5-5-low",
+            "claude-sonnet-5-5-high",
+            "claude-sonnet-4-6",
+            "claude-sonnet-5-5-medium",
+            "claude-sonnet-5-5-low",
+        ],
+        "novoid-hydrogen" => &[
+            "gemini-4-hydrogen-xhigh",
+            "gemini-4-hydrogen-high",
+            "gemini-4-hydrogen-medium",
+            "gemini-4-hydrogen-low",
+            "gemini-4-hydrogen-tiered-xhigh",
+            "gemini-4-hydrogen-tiered-high",
+            "gemini-4-hydrogen-sonar",
+        ],
+        "novoid-neon" => &[
+            "gemini-4-neon-xhigh",
+            "gemini-4-neon-high",
+            "gemini-4-neon-medium",
+            "gemini-4-neon-low",
+        ],
+        "novoid-carbon" => &[
+            "gemini-4-carbon-high",
+            "gemini-4-carbon-medium",
+            "gemini-4-carbon-low",
+        ],
+        "novoid-argon" => &[
+            "gemini-4-argon-high",
+            "gemini-4-argon-medium",
+            "gemini-4-argon-low",
+        ],
+        "novoid-flash" => &[
+            "gemini-3.8-flash-high",
+            "gemini-3.8-flash-medium",
+            "gemini-3.8-flash-low",
+            "gemini-3.8-flash-tiered",
+            "gemini-2.5-flash-thinking",
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash-lite",
+        ],
+        "novoid-default" => &["gemini-3-flash", "gemini-2.5-flash"],
+        _ => &[],
+    };
+    raw.iter().map(|s| (*s).to_string()).collect()
+}
+
 pub struct ModelRouter {
     pub upstream_url: String,
     pub client: Client,
@@ -609,12 +662,22 @@ impl ModelRouter {
                 eprintln!("[NovoidProxy] Loi lay /v1/models: HTTP {}", r.status());
                 let mut inner = self.inner.write().await;
                 inner.last_models_status = Some(code);
+                if inner.groups.values().all(|v| v.is_empty()) {
+                    for key in GROUP_KEYS {
+                        inner.groups.insert(key.to_string(), default_group_models(key));
+                    }
+                }
                 return inner.cached_models_json.clone();
             }
             Err(err) => {
                 eprintln!("[NovoidProxy] Loi lay /v1/models: {err}");
                 let mut inner = self.inner.write().await;
                 inner.last_models_status = Some(502);
+                if inner.groups.values().all(|v| v.is_empty()) {
+                    for key in GROUP_KEYS {
+                        inner.groups.insert(key.to_string(), default_group_models(key));
+                    }
+                }
                 return inner.cached_models_json.clone();
             }
         };
