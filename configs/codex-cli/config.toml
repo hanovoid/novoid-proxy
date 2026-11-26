@@ -1,0 +1,9 @@
+model = "novoid-default"
+model_provider = "novoid-core"
+model_reasoning_effort = "high"
+
+[model_providers.novoid-core]
+name = "Novoid Core"
+base_url = "https://<your-railway-domain>.up.railway.app/v1"
+env_key = "NOVOID_API_KEY"
+wire_api = "chat"

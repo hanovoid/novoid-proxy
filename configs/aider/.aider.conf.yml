@@ -1,0 +1,6 @@
+model: anthropic/novoid-default
+weak-model: anthropic/novoid-flash-low
+editor-model: anthropic/novoid-claude-opus-high
+set-env:
+  - ANTHROPIC_API_BASE=https://<your-railway-domain>.up.railway.app
+  - ANTHROPIC_API_KEY=sk-novoid-proxy

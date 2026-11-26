@@ -1,0 +1,7 @@
+target/
+.env
+.env.*
+accounts.json
+*accounts*.json
+*.log
+.DS_Store

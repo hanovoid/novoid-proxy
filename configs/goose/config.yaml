@@ -1,0 +1,3 @@
+GOOSE_PROVIDER: anthropic
+GOOSE_MODEL: novoid-default
+ANTHROPIC_HOST: https://<your-railway-domain>.up.railway.app

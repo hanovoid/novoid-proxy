@@ -1,0 +1,11 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://<your-railway-domain>.up.railway.app",
+    "ANTHROPIC_API_KEY": "sk-novoid-proxy",
+    "ANTHROPIC_MODEL": "novoid-default",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "novoid-claude-opus-high",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "novoid-claude-sonnet-medium",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "novoid-flash-low",
+    "ANTHROPIC_SMALL_FAST_MODEL": "novoid-flash-low"
+  }
+}

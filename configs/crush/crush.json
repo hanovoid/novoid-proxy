@@ -1,0 +1,52 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "novoid-core": {
+      "name": "Novoid Core",
+      "type": "anthropic",
+      "base_url": "https://<your-railway-domain>.up.railway.app/v1",
+      "api_key": "sk-novoid-proxy",
+      "models": [
+        { "id": "novoid-default", "name": "Novoid Default (Auto)" },
+        { "id": "novoid-default-high", "name": "Novoid Default (High)" },
+        { "id": "novoid-default-medium", "name": "Novoid Default (Medium)" },
+        { "id": "novoid-default-low", "name": "Novoid Default (Low)" },
+        { "id": "novoid-claude", "name": "Novoid Claude (Auto)" },
+        { "id": "novoid-claude-opus-high", "name": "Novoid Claude Opus (High)" },
+        { "id": "novoid-claude-opus-medium", "name": "Novoid Claude Opus (Medium)" },
+        { "id": "novoid-claude-opus-low", "name": "Novoid Claude Opus (Low)" },
+        { "id": "novoid-claude-sonnet-high", "name": "Novoid Claude Sonnet (High)" },
+        { "id": "novoid-claude-sonnet-medium", "name": "Novoid Claude Sonnet (Medium)" },
+        { "id": "novoid-claude-sonnet-low", "name": "Novoid Claude Sonnet (Low)" },
+        { "id": "novoid-flash", "name": "Novoid Flash (Auto)" },
+        { "id": "novoid-flash-high", "name": "Novoid Flash (High)" },
+        { "id": "novoid-flash-medium", "name": "Novoid Flash (Medium)" },
+        { "id": "novoid-flash-low", "name": "Novoid Flash (Low)" },
+        { "id": "novoid-flash-tiered", "name": "Novoid Flash (Tiered)" },
+        { "id": "novoid-flash-thinking", "name": "Novoid Flash (Thinking)" },
+        { "id": "novoid-flash-lite", "name": "Novoid Flash (Lite)" },
+        { "id": "novoid-neon", "name": "Novoid Neon (Auto)" },
+        { "id": "novoid-neon-xhigh", "name": "Novoid Neon (XHigh)" },
+        { "id": "novoid-neon-high", "name": "Novoid Neon (High)" },
+        { "id": "novoid-neon-medium", "name": "Novoid Neon (Medium)" },
+        { "id": "novoid-neon-low", "name": "Novoid Neon (Low)" },
+        { "id": "novoid-hydrogen", "name": "Novoid Hydrogen (Auto)" },
+        { "id": "novoid-hydrogen-xhigh", "name": "Novoid Hydrogen (XHigh)" },
+        { "id": "novoid-hydrogen-high", "name": "Novoid Hydrogen (High)" },
+        { "id": "novoid-hydrogen-medium", "name": "Novoid Hydrogen (Medium)" },
+        { "id": "novoid-hydrogen-low", "name": "Novoid Hydrogen (Low)" },
+        { "id": "novoid-hydrogen-tiered-xhigh", "name": "Novoid Hydrogen (Tiered XHigh)" },
+        { "id": "novoid-hydrogen-tiered-high", "name": "Novoid Hydrogen (Tiered High)" },
+        { "id": "novoid-hydrogen-sonar", "name": "Novoid Hydrogen (Sonar)" },
+        { "id": "novoid-carbon", "name": "Novoid Carbon (Auto)" },
+        { "id": "novoid-carbon-high", "name": "Novoid Carbon (High)" },
+        { "id": "novoid-carbon-medium", "name": "Novoid Carbon (Medium)" },
+        { "id": "novoid-carbon-low", "name": "Novoid Carbon (Low)" },
+        { "id": "novoid-argon", "name": "Novoid Argon (Auto)" },
+        { "id": "novoid-argon-high", "name": "Novoid Argon (High)" },
+        { "id": "novoid-argon-medium", "name": "Novoid Argon (Medium)" },
+        { "id": "novoid-argon-low", "name": "Novoid Argon (Low)" }
+      ]
+    }
+  }
+}

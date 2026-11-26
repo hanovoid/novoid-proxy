@@ -1,0 +1,146 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "novoid-core": {
+      "name": "Novoid Core",
+      "package": "@opencode/ai/providers/anthropic",
+      "settings": {
+        "baseURL": "https://<your-railway-domain>.up.railway.app/v1",
+        "apiKey": "sk-novoid-proxy"
+      },
+      "models": {
+        "novoid-claude": {
+          "name": "Novoid Claude",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 200000, "output": 64000 },
+          "variants": [
+            { "id": "default" },
+            { "id": "opus-high", "headers": { "x-novoid-tier": "opus-high" } },
+            { "id": "opus-medium", "headers": { "x-novoid-tier": "opus-medium" } },
+            { "id": "opus-low", "headers": { "x-novoid-tier": "opus-low" } },
+            { "id": "sonnet-high", "headers": { "x-novoid-tier": "sonnet-high" } },
+            { "id": "sonnet-medium", "headers": { "x-novoid-tier": "sonnet-medium" } },
+            { "id": "sonnet-low", "headers": { "x-novoid-tier": "sonnet-low" } }
+          ]
+        },
+        "novoid-default": {
+          "name": "Novoid Default",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } }
+          ]
+        },
+        "novoid-flash": {
+          "name": "Novoid Flash",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } },
+            { "id": "tiered", "headers": { "x-novoid-tier": "tiered" } },
+            { "id": "thinking", "headers": { "x-novoid-tier": "thinking" } },
+            { "id": "lite", "headers": { "x-novoid-tier": "lite" } }
+          ]
+        },
+        "novoid-neon": {
+          "name": "Novoid Neon",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "xhigh", "headers": { "x-novoid-tier": "xhigh" } },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } }
+          ]
+        },
+        "novoid-hydrogen": {
+          "name": "Novoid Hydrogen",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "xhigh", "headers": { "x-novoid-tier": "xhigh" } },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } },
+            { "id": "tiered-xhigh", "headers": { "x-novoid-tier": "tiered-xhigh" } },
+            { "id": "tiered-high", "headers": { "x-novoid-tier": "tiered-high" } },
+            { "id": "sonar", "headers": { "x-novoid-tier": "sonar" } }
+          ]
+        },
+        "novoid-carbon": {
+          "name": "Novoid Carbon",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } }
+          ]
+        },
+        "novoid-argon": {
+          "name": "Novoid Argon",
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true }
+          },
+          "limit": { "context": 1000000, "output": 65536 },
+          "variants": [
+            { "id": "default" },
+            { "id": "high", "headers": { "x-novoid-tier": "high" } },
+            { "id": "medium", "headers": { "x-novoid-tier": "medium" } },
+            { "id": "low", "headers": { "x-novoid-tier": "low" } }
+          ]
+        }
+      }
+    }
+  },
+  "model": "novoid-core/novoid-default"
+}

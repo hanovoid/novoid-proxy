@@ -1,0 +1,11 @@
+.git
+.gitignore
+README.md
+LICENSE
+docs
+configs
+scripts
+tests
+target
+*accounts*.json
+*.log
