@@ -537,11 +537,39 @@ impl ModelRouter {
         self.inner.read().await.groups.clone()
     }
 
+    pub async fn get_or_refresh_models(self: &Arc<Self>, force: bool) -> Option<Value> {
+        if !force {
+            let guard = self.inner.read().await;
+            if guard.cached_models_json.is_some() && guard.groups.values().any(|v| !v.is_empty()) {
+                let stale =
+                    now_ms().saturating_sub(guard.last_refresh_at) > MODELS_REFRESH_TTL_MS;
+                let cached = guard.cached_models_json.clone();
+                drop(guard);
+                if stale {
+                    let bg = Arc::clone(self);
+                    tokio::spawn(async move {
+                        bg.refresh_models(false).await;
+                    });
+                }
+                return cached;
+            }
+        }
+        self.refresh_models(force).await
+    }
+
     pub async fn refresh_models(&self, force: bool) -> Option<Value> {
+        if !force {
+            let guard = self.inner.read().await;
+            if now_ms().saturating_sub(guard.last_refresh_at) < MODELS_REFRESH_TTL_MS
+                && guard.groups.values().any(|v| !v.is_empty())
+            {
+                return guard.cached_models_json.clone();
+            }
+        }
         let _guard = self.refresh_lock.lock().await;
         if !force {
             let guard = self.inner.read().await;
-            if now_ms().saturating_sub(guard.last_refresh_at) < 2_000
+            if now_ms().saturating_sub(guard.last_refresh_at) < MODELS_REFRESH_TTL_MS
                 && guard.groups.values().any(|v| !v.is_empty())
             {
                 return guard.cached_models_json.clone();
@@ -656,7 +684,7 @@ impl ModelRouter {
     }
 
     pub async fn dispatch_with_group_rotation(
-        &self,
+        self: &Arc<Self>,
         group_key: &str,
         requested_model: &str,
         forward_headers: &HeaderMap,
@@ -674,8 +702,13 @@ impl ModelRouter {
             (empty, stale)
         };
 
-        if is_empty || stale {
+        if is_empty {
             self.refresh_models(false).await;
+        } else if stale {
+            let bg = Arc::clone(self);
+            tokio::spawn(async move {
+                bg.refresh_models(false).await;
+            });
         }
 
         let current_len = {
@@ -723,6 +756,9 @@ impl ModelRouter {
 
         for pass in 0..2 {
             if pass == 1 {
+                if !saw_unsupported {
+                    break;
+                }
                 let last_refresh = self.inner.read().await.last_refresh_at;
                 if now_ms().saturating_sub(last_refresh) <= 5_000 {
                     break;

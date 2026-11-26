@@ -408,6 +408,7 @@ pub fn pipe_anthropic_stream_to_openai(
     requested_model: String,
 ) -> impl Stream<Item = Result<Bytes, Infallible>> + Send {
     stream! {
+        yield Ok(Bytes::from_static(b": keepalive\n\n"));
         let mut byte_stream = upstream_res.bytes_stream();
         let mut buffer = Vec::<u8>::new();
         let id = format!("chatcmpl-{}", Uuid::new_v4().simple());

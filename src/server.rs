@@ -121,7 +121,7 @@ async fn handle_models(
     Query(params): Query<HashMap<String, String>>,
 ) -> Json<Value> {
     let force = params.get("refresh").map(|v| v == "true").unwrap_or(false);
-    let upstream_json = state.router.refresh_models(force).await;
+    let upstream_json = state.router.get_or_refresh_models(force).await;
     let existing_data = upstream_json
         .as_ref()
         .and_then(|v| v.get("data"))
@@ -363,6 +363,7 @@ async fn handle_chat_completions(State(state): State<ProxyState>, req: Request) 
                             .header(header::CONTENT_TYPE, "text/event-stream; charset=utf-8")
                             .header(header::CACHE_CONTROL, "no-cache")
                             .header(header::CONNECTION, "keep-alive")
+                            .header("X-Accel-Buffering", "no")
                             .body(Body::from_stream(oai_stream))
                             .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response());
                     } else {
