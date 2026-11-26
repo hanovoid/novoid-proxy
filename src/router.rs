@@ -8,7 +8,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::{Mutex, RwLock};
 
 pub const MODELS_REFRESH_TTL_MS: u64 = 60_000;
-pub const MODELS_FETCH_TIMEOUT_SECS: u64 = 10;
+pub const MODELS_FETCH_TIMEOUT_SECS: u64 = 25;
 pub const DEFAULT_FALLBACK_API_KEY: &str = "sk-novoid-proxy";
 
 pub const GROUP_KEYS: [&str; 7] = [
@@ -174,16 +174,16 @@ pub fn classify_model_group(model_id: &str) -> Option<&'static str> {
     if lower.contains("claude") {
         return Some("novoid-claude");
     }
-    if is_group_4_variant(&lower, "gemini-4-neon") {
+    if is_group_4_variant(&lower, "gemini-4-neon") || lower.contains("neon") {
         return Some("novoid-neon");
     }
-    if is_group_4_variant(&lower, "gemini-4-hydrogen") {
+    if is_group_4_variant(&lower, "gemini-4-hydrogen") || lower.contains("hydrogen") {
         return Some("novoid-hydrogen");
     }
-    if is_group_4_variant(&lower, "gemini-4-carbon") {
+    if is_group_4_variant(&lower, "gemini-4-carbon") || lower.contains("carbon") {
         return Some("novoid-carbon");
     }
-    if is_group_4_variant(&lower, "gemini-4-argon") {
+    if is_group_4_variant(&lower, "gemini-4-argon") || lower.contains("argon") {
         return Some("novoid-argon");
     }
     if lower == "gemini-2.5-flash" || lower == "gemini-3-flash" {
@@ -487,6 +487,19 @@ struct RouterInner {
     tier_index: HashMap<String, usize>,
     cached_models_json: Option<Value>,
     last_refresh_at: u64,
+    last_models_status: Option<u16>,
+}
+
+fn fallback_groups_for(group_key: &str) -> &'static [&'static str] {
+    match group_key {
+        "novoid-argon" => &["novoid-carbon", "novoid-hydrogen", "novoid-neon", "novoid-default"],
+        "novoid-carbon" => &["novoid-argon", "novoid-hydrogen", "novoid-neon", "novoid-default"],
+        "novoid-neon" => &["novoid-hydrogen", "novoid-carbon", "novoid-default"],
+        "novoid-hydrogen" => &["novoid-neon", "novoid-carbon", "novoid-default"],
+        "novoid-flash" => &["novoid-default"],
+        "novoid-default" => &["novoid-flash", "novoid-carbon", "novoid-hydrogen"],
+        _ => &[],
+    }
 }
 
 pub struct ModelRouter {
@@ -529,6 +542,7 @@ impl ModelRouter {
                 tier_index: HashMap::new(),
                 cached_models_json: None,
                 last_refresh_at: 0,
+                last_models_status: None,
             }),
         })
     }
@@ -591,12 +605,17 @@ impl ModelRouter {
         {
             Ok(r) if r.status().is_success() => r,
             Ok(r) => {
+                let code = r.status().as_u16();
                 eprintln!("[NovoidProxy] Loi lay /v1/models: HTTP {}", r.status());
-                return self.inner.read().await.cached_models_json.clone();
+                let mut inner = self.inner.write().await;
+                inner.last_models_status = Some(code);
+                return inner.cached_models_json.clone();
             }
             Err(err) => {
                 eprintln!("[NovoidProxy] Loi lay /v1/models: {err}");
-                return self.inner.read().await.cached_models_json.clone();
+                let mut inner = self.inner.write().await;
+                inner.last_models_status = Some(502);
+                return inner.cached_models_json.clone();
             }
         };
 
@@ -649,6 +668,7 @@ impl ModelRouter {
             inner.tier_index.clear();
             inner.cached_models_json = Some(json_val.clone());
             inner.last_refresh_at = now_ms();
+            inner.last_models_status = Some(200);
         }
 
         Some(json_val)
@@ -691,19 +711,21 @@ impl ModelRouter {
         anth_payload: &Value,
         tier: Option<&str>,
     ) -> DispatchResult {
-        let (is_empty, stale) = {
+        let (is_empty, stale, since_refresh) = {
             let inner = self.inner.read().await;
             let empty = inner
                 .groups
                 .get(group_key)
                 .map(|v| v.is_empty())
                 .unwrap_or(true);
-            let stale = now_ms().saturating_sub(inner.last_refresh_at) > MODELS_REFRESH_TTL_MS;
-            (empty, stale)
+            let elapsed = now_ms().saturating_sub(inner.last_refresh_at);
+            let stale = elapsed > MODELS_REFRESH_TTL_MS;
+            (empty, stale, elapsed)
         };
 
         if is_empty {
-            self.refresh_models(false).await;
+            let force = since_refresh >= 3_000;
+            self.refresh_models(force).await;
         } else if stale {
             let bg = Arc::clone(self);
             tokio::spawn(async move {
@@ -711,12 +733,45 @@ impl ModelRouter {
             });
         }
 
+        let (effective_group, last_status_opt) = {
+            let inner = self.inner.read().await;
+            let direct_len = inner.groups.get(group_key).map(|v| v.len()).unwrap_or(0);
+            if direct_len > 0 {
+                (group_key.to_string(), inner.last_models_status)
+            } else {
+                let mut chosen = None;
+                for fb in fallback_groups_for(group_key) {
+                    if inner.groups.get(*fb).map(|v| !v.is_empty()).unwrap_or(false) {
+                        eprintln!(
+                            "[NovoidProxy] Nhom '{group_key}' dang trong, fallback sang '{fb}'"
+                        );
+                        chosen = Some((*fb).to_string());
+                        break;
+                    }
+                }
+                (chosen.unwrap_or_else(|| group_key.to_string()), inner.last_models_status)
+            }
+        };
+
+        let group_key = effective_group.as_str();
         let current_len = {
             let inner = self.inner.read().await;
             inner.groups.get(group_key).map(|v| v.len()).unwrap_or(0)
         };
 
         if current_len == 0 {
+            if last_status_opt == Some(503) {
+                return DispatchResult::RouterError {
+                    status: 503,
+                    body: json!({
+                        "type": "error",
+                        "error": {
+                            "type": "api_error",
+                            "message": "Upstream novoid-core chua co tai khoan Google nao kha dung (HTTP 503). Hay mo WebUI de ket noi hoac import tai khoan."
+                        }
+                    }),
+                };
+            }
             return DispatchResult::RouterError {
                 status: 404,
                 body: json!({
